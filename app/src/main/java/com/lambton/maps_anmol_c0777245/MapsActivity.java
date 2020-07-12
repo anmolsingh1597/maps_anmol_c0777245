@@ -9,13 +9,14 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
@@ -23,10 +24,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 
 import java.util.ArrayList;
@@ -37,10 +40,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private static final int REQUEST_CODE = 1;
     private static final String TAG = "MapsActivity";
-    //Fused location provider client
+//    Fused location provider client
     private FusedLocationProviderClient mClient;
-    private LocationRequest locationRequest;
-    private LocationCallback locationCallback;
+//    private LocationRequest locationRequest;
+//    private LocationCallback locationCallback;
 
     private static final int POLYGON_SIDES = 4;
     Polyline line;
@@ -80,7 +83,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        locationListener = new LocationListener() {
+        locationListener = new LocationListener(){
             @Override
             public void onLocationChanged(Location location) {
                 setHomeMarker(location);
@@ -104,65 +107,123 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (!hasLocationPermission()) {
             requestLocationPermission();
         } else {
-            startUpdateLocation();
+            startUpdateLocations();
         }
+        //apply long gesture
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+              /*
+                Location location = new Location("Your Destination");
+                location.setLatitude(latLng.latitude);
+                location.setLongitude(latLng.longitude);
+               */
+                // set marker
+                setMarker(latLng);
+
+            }
+
+            private void setMarker(LatLng latLng) {
+                MarkerOptions options = new MarkerOptions().position(latLng)
+                        .title("Your Destination")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        .snippet("Your Tapped location");
+/*
+                if (destMarker !=  null){ clearMap(); }
+                    destMarker = mMap.addMarker(options);
+                drawLine();*/
+
+                // check if there are already the same number of markers, we clear the map
+                if(markers.size() == POLYGON_SIDES){ clearMap(); }
+
+                markers.add(mMap.addMarker(options));
+
+                if(markers.size() ==  POLYGON_SIDES){ drawShape(); }
+            }
+
+            private void drawShape() {
+                PolygonOptions options = new PolygonOptions()
+                        .fillColor(0x35000000)
+                        .strokeColor(Color.RED)
+                        .strokeWidth(5);
+
+                for(int i = 0; i<POLYGON_SIDES; i++){
+                    options.add(markers.get(i).getPosition());
+                }
+                shape = mMap.addPolygon(options);
+            }
+
+            private void clearMap() {
+              /*  if(destMarker!=null){
+                    destMarker.remove();
+                    destMarker = null;
+                }
+                line.remove();*/
+                for(Marker marker: markers){
+                    marker.remove();
+                }
+
+                markers.clear();
+                shape.remove();
+                shape = null;
+
+            }
+ /*
+            private void drawLine() {
+                PolylineOptions options = new PolylineOptions()
+                        .color(Color.BLACK)
+                        .width(10)
+                        .add(homeMarker.getPosition(), destMarker.getPosition());
+                line = mMap.addPolyline(options);
+            }*/
+        });
+
     }
 
     //MARK: start update location
-    private void startUpdateLocation() {
-        locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(5000);
-        locationRequest.setFastestInterval(3000);
+    private void startUpdateLocations() {
 
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                mMap.clear();
-                if (locationResult != null) {
-                    Location location = locationResult.getLastLocation();
-
-                    LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 10));
-                }
-            }
-        };
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        mClient.requestLocationUpdates(locationRequest, locationCallback, null);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, locationListener);
 
+        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        setHomeMarker(lastKnownLocation);
     }
 
     private void requestLocationPermission() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},REQUEST_CODE);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
     }
 
     private boolean hasLocationPermission() {
-        return ActivityCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
+    private void setHomeMarker(Location location) {
+        LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        MarkerOptions options = new MarkerOptions().position(userLocation)
+                .title("You are here")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                .snippet("Your Location");
+        homeMarker = mMap.addMarker(options);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if(requestCode == REQUEST_CODE){
-            if(shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)){
-                new AlertDialog.Builder(this)
-                        .setMessage("The permission is necessary")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                requestLocationPermission();
-                            }
-                        }).create();
-            }else {
-                startUpdateLocation();
+        if (REQUEST_CODE == requestCode) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,5000,0,locationListener);
             }
         }
-
     }
-
 }
