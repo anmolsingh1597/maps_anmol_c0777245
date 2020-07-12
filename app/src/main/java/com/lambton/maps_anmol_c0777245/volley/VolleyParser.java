@@ -10,6 +10,22 @@ import java.util.List;
 
 public class VolleyParser {
 
+
+    public boolean statusCheck(JSONObject jsonObject){
+        String statucheck = "";
+        boolean status = true;
+        try{
+            statucheck = jsonObject.getString("status");
+            if(statucheck.equals("ZERO_RESULTS")){
+                status = false;
+            }
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+
+        return status;
+    }
+
     /**
      * parse method to parse the json data retrieved from direction api
      * @param jsonObject
@@ -17,11 +33,12 @@ public class VolleyParser {
      */
     public HashMap<String, String> parseDistance(JSONObject jsonObject){
         JSONArray jsonArray = null;
-        try {
-            jsonArray = jsonObject.getJSONArray("routes").getJSONObject(0).getJSONArray("legs");
-        }catch (JSONException e){
-            e.printStackTrace();
-        }
+            try {
+                jsonArray = jsonObject.getJSONArray("routes").getJSONObject(0).getJSONArray("legs");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
         return getDuration(jsonArray);
 
     }
@@ -47,7 +64,6 @@ public class VolleyParser {
     public  String[] parseDirection (JSONObject jsonObject){
         JSONArray jsonArray = null;
         try {
-
             jsonArray = jsonObject.getJSONArray("routes").getJSONObject(0).getJSONArray("legs")
                     .getJSONObject(0).getJSONArray("steps");
         }catch (JSONException e){

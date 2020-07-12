@@ -41,6 +41,7 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.lambton.maps_anmol_c0777245.volley.GetByVolley;
+import com.lambton.maps_anmol_c0777245.volley.VolleyParser;
 import com.lambton.maps_anmol_c0777245.volley.VolleySingleton;
 
 import org.json.JSONObject;
@@ -181,14 +182,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, getDirectionUrl(polygonPoints.get(i), polygonPoints.get(endIndex)), null, new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
-                            String value = GetByVolley.getDirection(response, mMap).replace(" km", "");
-                            value = value.replace("1 m", "0");
-                            finalDistance += Double.parseDouble(value);
-                            lastIndexForVolleyResponse +=1;
-                            if(lastIndexForVolleyResponse == polygonPoints.size()-1){
-
-                                distanceAlert();
-                                lastIndexForVolleyResponse = -1;
+                            if(GetByVolley.getDirection(response, mMap).equals("errorValue")){
+                                errorAlert();
+                            }else {
+                                String value = GetByVolley.getDirection(response, mMap).replace(" km", "");
+                                value = value.replace("1 m", "0");
+                                finalDistance += Double.parseDouble(value);
+                                lastIndexForVolleyResponse += 1;
+                                if (lastIndexForVolleyResponse == polygonPoints.size() - 1) {
+                                    distanceAlert();
+                                    lastIndexForVolleyResponse = -1;
+                                }
                             }
                         }
                     }, new Response.ErrorListener() {
@@ -198,20 +202,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     });
                     VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest);
-
-
-
-
                 }
-
-
             }
         });
     }
 
+    private void errorAlert(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+        builder.setMessage("You tapped over sea or unknown region")
+                .setPositiveButton("Sorry", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                    }
+                })
+                .setCancelable(false)
+                .show();
+    }
+
     private void distanceAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("Total Distance: " + finalDistance.floatValue() +" km")
+        builder.setMessage("Total Distance (A-B-C-D): " + finalDistance.floatValue() +" km")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         finalDistance = 0.0;
