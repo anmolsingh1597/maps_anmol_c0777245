@@ -23,10 +23,23 @@ public class GetByVolley {
 
         String distance = distances.get("distance");
         String duration = distances.get("duration");
+        String endAddress = distances.get("end_address");
+        String startAddress = distances.get("start_address");
 
         String[] directionsList;
         directionsList = directionParser.parseDirection(jsonObject);
-        displayDirection(directionsList, distance, duration, googleMap, location);
+//        displayDirection(directionsList, distance, duration, googleMap, location);
+        displayLocality(endAddress, startAddress, googleMap, location);
+    }
+
+    private static void displayLocality(String endAddress, String startAddress, GoogleMap googleMap, Location location) {
+        googleMap.clear();
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        MarkerOptions options = new MarkerOptions().position(latLng)
+                .title(endAddress)
+                .snippet(startAddress)
+                .draggable(true);
+        googleMap.addMarker(options);
     }
 
     private static void displayDirection(String[] directionsList, String distance, String duration,  GoogleMap googleMap, Location location) {

@@ -10,11 +10,19 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -31,19 +39,31 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
+import com.lambton.maps_anmol_c0777245.volley.GetByVolley;
+import com.lambton.maps_anmol_c0777245.volley.VolleySingleton;
 
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerDragListener {
 
     private GoogleMap mMap;
     private static final int REQUEST_CODE = 1;
     private static final String TAG = "MapsActivity";
-//    Fused location provider client
+    private static final long UPDATE_INTERVAL = 5000;
+    private static final long FASTEST_INTERVAL = 3000;
+    private static final int RADIUS = 1500;
+
     private FusedLocationProviderClient mClient;
-//    private LocationRequest locationRequest;
-//    private LocationCallback locationCallback;
+
+    private LatLng userLocation;
+    Location localityLocation;
+
 
     private static final int POLYGON_SIDES = 4;
     Polyline line;
@@ -54,6 +74,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener;
     private Marker homeMarker;
     private Marker destMarker;
+    private boolean alertCalledValue = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +101,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setOnMarkerDragListener(MapsActivity.this);
+
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -113,65 +136,206 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // apply tap gesture
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
-            public void onMapClick(LatLng latLng) {
-                assignMarkers();
+            public void onMapClick(final LatLng latLng) {
+             if (!alertCalledValue){
+                 alertCalledValue = alertCall(latLng);
+                 
+             }else{
+                 assignMarker(latLng);
+             }
+
+            }
+
+            private boolean alertCall(final LatLng latLng){
+                AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+                builder.setMessage("Mark 4 Cities of Canada")
+                        .setPositiveButton("Manually", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+
+                            }
+                        })
+                        .setNegativeButton("Automatically", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                assignMarkers();
+                            }
+                        }).show();
+
+                return true;
             }
 
             private void assignMarkers() {
+                HashMap<String, String> localityHashMap = new HashMap<>();
+                localityHashMap = localityValue(new LatLng(43.7315,-79.7624));
                 MarkerOptions bramptonOptions = new MarkerOptions().position(new LatLng(43.7315,-79.7624))
-                        .title("Brampton")
+                        .title(localityHashMap.get("thoroughfare") + ", "+ localityHashMap.get("subThoroughfare") + ", "+ localityHashMap.get("postalCode"))
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .snippet("Ontario");
+                        .snippet(localityHashMap.get("locality") + ", "+ localityHashMap.get("adminArea"));
+                localityHashMap.clear();
+
+                localityHashMap = localityValue(new LatLng(43.8563,-79.5085));
                 MarkerOptions vaughanOptions = new MarkerOptions().position(new LatLng(43.8563,-79.5085))
-                        .title("Vaughan")
+                        .title(localityHashMap.get("thoroughfare") + ", "+ localityHashMap.get("subThoroughfare") + ", "+ localityHashMap.get("postalCode"))
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .snippet("Ontario");
+                        .snippet(localityHashMap.get("locality") + ", "+ localityHashMap.get("adminArea"));
+                localityHashMap.clear();
+
+                localityHashMap = localityValue(new LatLng(43.6532,-79.3832));
                 MarkerOptions torontoOptions = new MarkerOptions().position(new LatLng(43.6532,-79.3832))
-                        .title("Toronto")
+                        .title(localityHashMap.get("thoroughfare") + ", "+ localityHashMap.get("subThoroughfare") + ", "+ localityHashMap.get("postalCode"))
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .snippet("Ontario");
+                        .snippet(localityHashMap.get("locality") + ", "+ localityHashMap.get("adminArea"));
+                localityHashMap.clear();
+
+                localityHashMap = localityValue(new LatLng(43.3255,-79.7990));
                 MarkerOptions burlingtonOptions = new MarkerOptions().position(new LatLng(43.3255,-79.7990))
-                        .title("Burlington")
+                        .title(localityHashMap.get("thoroughfare") + ", "+ localityHashMap.get("subThoroughfare") + ", "+ localityHashMap.get("postalCode"))
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .snippet("Ontario");
+                        .snippet(localityHashMap.get("locality") + ", "+ localityHashMap.get("adminArea"));
+                localityHashMap.clear();
+
                 if(markers.size() == POLYGON_SIDES){ clearMap(); }
                 markers.add(mMap.addMarker(bramptonOptions));
                 markers.add(mMap.addMarker(vaughanOptions));
                 markers.add(mMap.addMarker(torontoOptions));
                 markers.add(mMap.addMarker(burlingtonOptions));
 
+
                 if(markers.size() ==  POLYGON_SIDES){ drawShape(); }
-
-            }
-            private void drawShape() {
-                PolygonOptions options = new PolygonOptions()
-                        .fillColor(0x35377822)
-                        .strokeColor(Color.RED)
-                        .strokeWidth(5);
-
-                for(int i = 0; i<POLYGON_SIDES; i++){
-                    options.add(markers.get(i).getPosition());
-                }
-                shape = mMap.addPolygon(options);
             }
 
-            private void clearMap() {
-              /*  if(destMarker!=null){
-                    destMarker.remove();
-                    destMarker = null;
-                }
-                line.remove();*/
-                for(Marker marker: markers){
-                    marker.remove();
-                }
-
-                markers.clear();
-                shape.remove();
-                shape = null;
-
-            }
         });
     }
+
+    private void assignMarker(LatLng latLng) {
+
+        HashMap<String, String> localityHashMap = new HashMap<>();
+        localityHashMap = localityValue(latLng);
+        MarkerOptions options = new MarkerOptions().position(latLng)
+                .title(localityHashMap.get("thoroughfare") + ", "+ localityHashMap.get("subThoroughfare") + ", "+ localityHashMap.get("postalCode"))
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .snippet(localityHashMap.get("locality") + ", "+ localityHashMap.get("adminArea"));
+        localityHashMap.clear();
+
+        markers.add(mMap.addMarker(options));
+
+        if(markers.size() ==  POLYGON_SIDES){ drawShape(); }
+    }
+
+    private void drawShape() {
+        PolygonOptions options = new PolygonOptions()
+                .fillColor(0x35377822)
+                .strokeColor(Color.RED)
+                .strokeWidth(5);
+
+        for(int i = 0; i<POLYGON_SIDES; i++){
+            options.add(markers.get(i).getPosition());
+        }
+        shape = mMap.addPolygon(options);
+    }
+
+    private void clearMap() {
+        for(Marker marker: markers){
+            marker.remove();
+        }
+
+        markers.clear();
+        shape.remove();
+        shape = null;
+
+    }
+
+    private HashMap<String, String> localityValue(LatLng latLng){
+
+        HashMap<String,String> localityHashMap = new HashMap<>();
+
+        Geocoder geocoder = new Geocoder(MapsActivity.this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+
+            if(addresses != null && addresses.size()>0){
+                String address = "";
+                if(addresses.get(0).getAdminArea() != null){
+                    address += addresses.get(0).getAdminArea() + " ";
+                    localityHashMap.put("adminArea",addresses.get(0).getAdminArea());
+                }
+                if (addresses.get(0).getLocality() != null){
+                    address += addresses.get(0).getLocality() + " ";
+                    localityHashMap.put("locality", addresses.get(0).getLocality());
+                }
+                if(addresses.get(0).getPostalCode() != null){
+                    address += addresses.get(0).getPostalCode() + " ";
+                    localityHashMap.put("postalCode", addresses.get(0).getPostalCode());
+                }
+                if(addresses.get(0).getThoroughfare() != null){
+                    address += addresses.get(0).getThoroughfare() + " ";
+                    localityHashMap.put("thoroughfare", addresses.get(0).getThoroughfare());
+                }
+                if(addresses.get(0).getSubThoroughfare() != null){
+                    address += addresses.get(0).getSubThoroughfare() + " ";
+                    localityHashMap.put("subThoroughfare", addresses.get(0).getSubThoroughfare());
+                }
+                if(addresses.get(0).getPremises() != null){
+                    address += addresses.get(0).getPremises() + " ";
+                    localityHashMap.put("premises", addresses.get(0).getPremises());
+                }
+                Toast.makeText(MapsActivity.this, address, Toast.LENGTH_SHORT).show();
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+            return localityHashMap;
+    }
+/*
+
+    private void getLocality(){
+       getDestination(new IPassData() {
+
+           @Override
+           public void destinationSelected(final Location location, final GoogleMap map) {
+               //By volley library
+               LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+               JsonObjectRequest jsonObjectRequest =  new JsonObjectRequest(Request.Method.GET,getDirectionUrl(latLng),null, new Response.Listener<JSONObject>() {
+                   @Override
+                   public void onResponse(JSONObject response) {
+                       GetByVolley.getDirection(response,map,location);
+                   }
+               }, new Response.ErrorListener() {
+                   @Override
+                   public void onErrorResponse(VolleyError error) {
+
+                   }
+               });
+               VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest);
+           }
+       });
+
+    }
+*/
+
+  /*  public void getDestination(IPassData callback){
+        callback.destinationSelected(localityLocation, mMap);
+    }
+*/
+/*
+    private String getPlaceUrl(double latitude, double longitude, String placeType) {
+        StringBuilder googlePlaceUrl = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+        googlePlaceUrl.append("location="+latitude+","+longitude);
+        googlePlaceUrl.append("&radius="+RADIUS);
+        googlePlaceUrl.append("&type="+placeType);
+        googlePlaceUrl.append("&key="+getString(R.string.google_maps_key));
+        Log.d(TAG, "getplacesURL: " + googlePlaceUrl.toString());
+        return googlePlaceUrl.toString();
+    }
+*/
+
+/*    private String getDirectionUrl(LatLng location) {
+        StringBuilder googleDirectionUrl = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
+        googleDirectionUrl.append("origin="+userLocation.latitude+","+userLocation.longitude);
+        googleDirectionUrl.append("&destination="+location.latitude+","+location.longitude);
+        googleDirectionUrl.append("&key="+getString(R.string.google_maps_key));
+        Log.d(TAG, "getdirectionalURL: " + googleDirectionUrl.toString());
+        return googleDirectionUrl.toString();
+    }*/
 
     //MARK: start update location
     private void startUpdateLocations() {
@@ -189,6 +353,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, locationListener);
 
         Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
         setHomeMarker(lastKnownLocation);
     }
 
@@ -219,4 +384,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+
+        localityLocation.setLatitude(marker.getPosition().latitude);
+        localityLocation.setLongitude(marker.getPosition().longitude);
+
+        Geocoder geocoder = new Geocoder(MapsActivity.this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(localityLocation.getLatitude(), localityLocation.getLongitude(), 1);
+
+            if(addresses != null && addresses.size()>0){
+                String address = "";
+                if(addresses.get(0).getAdminArea() != null){
+                    address += addresses.get(0).getAdminArea() + " ";
+                }
+                if (addresses.get(0).getLocality() != null){
+                    address += addresses.get(0).getLocality() + " ";
+                }
+                if(addresses.get(0).getPostalCode() != null){
+                    address += addresses.get(0).getPostalCode() + " ";
+                }
+                if(addresses.get(0).getThoroughfare() != null){
+                    address += addresses.get(0).getThoroughfare() + " ";
+                }
+                Toast.makeText(MapsActivity.this, address, Toast.LENGTH_SHORT).show();
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
+
+
+
 }
