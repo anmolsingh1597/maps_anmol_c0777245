@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
+import com.lambton.maps_anmol_c0777245.MapsActivity;
 //import com.s20.directiondemo.netWorking.DataParser;
 import org.json.JSONObject;
 
@@ -16,30 +17,18 @@ import java.util.HashMap;
 import java.util.List;
 
 public class GetByVolley {
-    public static void getDirection(JSONObject jsonObject, GoogleMap googleMap, Location location){
+    public static String getDirection(JSONObject jsonObject, GoogleMap googleMap){
         HashMap<String, String> distances = null;
         VolleyParser directionParser = new VolleyParser();
         distances = directionParser.parseDistance(jsonObject);
 
         String distance = distances.get("distance");
         String duration = distances.get("duration");
-        String endAddress = distances.get("end_address");
-        String startAddress = distances.get("start_address");
 
         String[] directionsList;
         directionsList = directionParser.parseDirection(jsonObject);
 //        displayDirection(directionsList, distance, duration, googleMap, location);
-        displayLocality(endAddress, startAddress, googleMap, location);
-    }
-
-    private static void displayLocality(String endAddress, String startAddress, GoogleMap googleMap, Location location) {
-        googleMap.clear();
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions options = new MarkerOptions().position(latLng)
-                .title(endAddress)
-                .snippet(startAddress)
-                .draggable(true);
-        googleMap.addMarker(options);
+        return distance;
     }
 
     private static void displayDirection(String[] directionsList, String distance, String duration,  GoogleMap googleMap, Location location) {
