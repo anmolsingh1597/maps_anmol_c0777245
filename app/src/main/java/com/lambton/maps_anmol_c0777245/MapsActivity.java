@@ -109,38 +109,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             startUpdateLocations();
         }
-        //apply long gesture
-        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-            @Override
-            public void onMapLongClick(LatLng latLng) {
-              /*
-                Location location = new Location("Your Destination");
-                location.setLatitude(latLng.latitude);
-                location.setLongitude(latLng.longitude);
-               */
-                // set marker
-                setMarker(latLng);
 
+        // apply tap gesture
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                assignMarkers();
             }
 
-            private void setMarker(LatLng latLng) {
-                MarkerOptions options = new MarkerOptions().position(latLng)
-                        .title("Your Destination")
+            private void assignMarkers() {
+                MarkerOptions bramptonOptions = new MarkerOptions().position(new LatLng(43.7315,-79.7624))
+                        .title("Brampton")
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .snippet("Your Tapped location");
-/*
-                if (destMarker !=  null){ clearMap(); }
-                    destMarker = mMap.addMarker(options);
-                drawLine();*/
-
-                // check if there are already the same number of markers, we clear the map
+                        .snippet("Ontario");
+                MarkerOptions vaughanOptions = new MarkerOptions().position(new LatLng(43.8563,-79.5085))
+                        .title("Vaughan")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        .snippet("Ontario");
+                MarkerOptions torontoOptions = new MarkerOptions().position(new LatLng(43.6532,-79.3832))
+                        .title("Toronto")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        .snippet("Ontario");
+                MarkerOptions burlingtonOptions = new MarkerOptions().position(new LatLng(43.3255,-79.7990))
+                        .title("Burlington")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        .snippet("Ontario");
                 if(markers.size() == POLYGON_SIDES){ clearMap(); }
-
-                markers.add(mMap.addMarker(options));
+                markers.add(mMap.addMarker(bramptonOptions));
+                markers.add(mMap.addMarker(vaughanOptions));
+                markers.add(mMap.addMarker(torontoOptions));
+                markers.add(mMap.addMarker(burlingtonOptions));
 
                 if(markers.size() ==  POLYGON_SIDES){ drawShape(); }
-            }
 
+            }
             private void drawShape() {
                 PolygonOptions options = new PolygonOptions()
                         .fillColor(0x35000000)
@@ -168,16 +170,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 shape = null;
 
             }
- /*
-            private void drawLine() {
-                PolylineOptions options = new PolylineOptions()
-                        .color(Color.BLACK)
-                        .width(10)
-                        .add(homeMarker.getPosition(), destMarker.getPosition());
-                line = mMap.addPolyline(options);
-            }*/
         });
-
     }
 
     //MARK: start update location
@@ -214,7 +207,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                 .snippet("Your Location");
         homeMarker = mMap.addMarker(options);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, (float) 9.3));
     }
 
     @Override
