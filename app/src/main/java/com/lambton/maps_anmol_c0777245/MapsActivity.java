@@ -145,7 +145,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             private void drawShape() {
                 PolygonOptions options = new PolygonOptions()
-                        .fillColor(0x35000000)
+                        .fillColor(0x35377822)
                         .strokeColor(Color.RED)
                         .strokeWidth(5);
 
