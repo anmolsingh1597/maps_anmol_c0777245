@@ -216,13 +216,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onClick(DialogInterface dialog, int id) {
                         finalDistance = 0.0;
                     }
-                }).show();
+                })
+                .setCancelable(false)
+                .show();
     }
 
 
     private boolean alertCall(final LatLng latLng) {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("Mark 4 Cities of Canada")
+        builder.setMessage("Mark 4 Cities of Canada:")
                 .setPositiveButton("Manually", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         assignMarker(latLng);
@@ -232,7 +234,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onClick(DialogInterface dialog, int id) {
                         assignMarkers();
                     }
-                }).show();
+                })
+                .setCancelable(false)
+                .show();
 
         return true;
     }
