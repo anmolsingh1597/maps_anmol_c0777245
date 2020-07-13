@@ -23,6 +23,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -43,6 +44,7 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.snackbar.Snackbar;
 import com.lambton.maps_anmol_c0777245.dataParsing.GetDirectionsData;
 import com.lambton.maps_anmol_c0777245.volley.GetByVolley;
 import com.lambton.maps_anmol_c0777245.volley.VolleySingleton;
@@ -174,7 +176,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 float[] distance = new float[1];
 
                 Location.distanceBetween(polyline.getPoints().get(0).latitude, polyline.getPoints().get(0).longitude, polyline.getPoints().get(1).latitude, polyline.getPoints().get(1).longitude, distance);
-                Toast.makeText(MapsActivity.this, ( (float) distance[0]) / 1000+ " km", Toast.LENGTH_LONG).show();
+                Snackbar.make(findViewById(android.R.id.content),( (float) distance[0]) / 1000+ " km",Snackbar.LENGTH_LONG)
+                        .setAction("CLOSE", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+
+                            }
+                        })
+                        .setActionTextColor(getResources().getColor(android.R.color.holo_red_light ))
+                        .show();
+
                 displayDirections(polyline);
             }
         });
