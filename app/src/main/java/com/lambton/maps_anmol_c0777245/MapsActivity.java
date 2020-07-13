@@ -17,16 +17,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -40,8 +36,8 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.lambton.maps_anmol_c0777245.dataParsing.GetDirectionsData;
 import com.lambton.maps_anmol_c0777245.volley.GetByVolley;
-import com.lambton.maps_anmol_c0777245.volley.VolleyParser;
 import com.lambton.maps_anmol_c0777245.volley.VolleySingleton;
 
 import org.json.JSONObject;
@@ -65,7 +61,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private LatLng userLocation;
     Location localityLocation;
-
+    int localityIndex;
 
     private static final int POLYGON_SIDES = 4;
     Polyline line;
@@ -155,7 +151,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
-
+                mMap.clear();
             }
         });
 
@@ -163,7 +159,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onPolylineClick(Polyline polyline) {
                 Log.d(TAG, "onPolylineClick: " + line.getPoints());
-
+                displayDirections(polyline);
             }
         });
 
@@ -182,10 +178,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, getDirectionUrl(polygonPoints.get(i), polygonPoints.get(endIndex)), null, new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
-                            if(GetByVolley.getDirection(response, mMap).equals("errorValue")){
+                            if (GetByVolley.getTotalDistance(response, mMap).equals("errorValue")) {
                                 errorAlert();
-                            }else {
-                                String value = GetByVolley.getDirection(response, mMap).replace(" km", "");
+                            } else {
+                                String value = GetByVolley.getTotalDistance(response, mMap).replace(" km", "");
                                 value = value.replace("1 m", "0");
                                 finalDistance += Double.parseDouble(value);
                                 lastIndexForVolleyResponse += 1;
@@ -207,9 +203,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void errorAlert(){
+    private void displayDirections(Polyline polyline) {
+        final List<LatLng> polylinePoints = polyline.getPoints();
+        int endIndex;
+
+        for (int i = 0; i < polylinePoints.size(); i++) {
+            localityIndex = i;
+            if (i + 1 == polylinePoints.size()) {
+                endIndex = 0;
+            } else {
+                endIndex = i + 1;
+            }
+
+            Object[] dataTransfer = new Object[3];
+            String url = getDirectionUrl(polylinePoints.get(i), polylinePoints.get(endIndex));
+            dataTransfer[0] = mMap;
+            dataTransfer[1] = url;
+            dataTransfer[2] = new LatLng(polylinePoints.get(i).latitude, polylinePoints.get(i).longitude);
+            GetDirectionsData getDirectionsData = new GetDirectionsData();
+            //execute async
+            getDirectionsData.execute(dataTransfer);
+
+        }
+
+
+    }
+
+    private void errorAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("You tapped over sea or unknown region")
+        builder.setMessage("You tapped over unknown region")
                 .setPositiveButton("Sorry", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
 
@@ -221,7 +243,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void distanceAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("Total Distance (A-B-C-D): " + finalDistance.floatValue() +" km")
+        builder.setMessage("Total Distance (A-B-C-D): " + finalDistance.floatValue() + " km")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         finalDistance = 0.0;
@@ -325,11 +347,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         PolygonOptions options = new PolygonOptions()
                 .fillColor(0x35377822)
                 .strokeColor(Color.RED)
-                .strokeWidth(5)
+                .strokeWidth(18)
                 .clickable(true);
         PolylineOptions options1 = new PolylineOptions()
                 .color(Color.RED)
-                .width(5)
+                .width(18)
                 .clickable(true);
 
         for (int i = 0; i < POLYGON_SIDES; i++) {
@@ -465,6 +487,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMarkerDragEnd(Marker marker) {
+
         HashMap<String, String> localityValueHashMap = new HashMap<>();
         localityValueHashMap = localityValue(new LatLng(marker.getPosition().latitude, marker.getPosition().longitude));
         marker.setTitle(localityValueHashMap.get("thoroughfare") + ", " + localityValueHashMap.get("subThoroughfare") + ", " + localityValueHashMap.get("postalCode"));

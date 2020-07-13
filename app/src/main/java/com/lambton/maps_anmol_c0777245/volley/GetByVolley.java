@@ -4,20 +4,16 @@ import android.graphics.Color;
 import android.location.Location;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
-import com.lambton.maps_anmol_c0777245.MapsActivity;
-//import com.s20.directiondemo.netWorking.DataParser;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class GetByVolley {
-    public static String getDirection(JSONObject jsonObject, GoogleMap googleMap){
+    public static String getTotalDistance(JSONObject jsonObject, GoogleMap googleMap){
         HashMap<String, String> distances = null;
         boolean status;
         VolleyParser directionParser = new VolleyParser();
@@ -27,35 +23,41 @@ public class GetByVolley {
             distance = "errorValue";
         }else {
         distances = directionParser.parseDistance(jsonObject);
-
         distance = distances.get("distance");
-        String duration = distances.get("duration");
+        }
+        return distance;
+    }
 
+
+
+    public static void getDirection(JSONObject jsonObject, GoogleMap googleMap, Location location){
+        HashMap<String, String> distances = null;
+        VolleyParser directionParser = new VolleyParser();
+        distances = directionParser.parseDistance(jsonObject);
+
+        String distance = distances.get("distance");
+        String duration = distances.get("duration");
 
         String[] directionsList;
         directionsList = directionParser.parseDirection(jsonObject);
-//        displayDirection(directionsList, distance, duration, googleMap, location);
-        }
-        return distance;
+        displayDirection(directionsList, distance, duration, googleMap, location);
     }
 
     private static void displayDirection(String[] directionsList, String distance, String duration,  GoogleMap googleMap, Location location) {
         googleMap.clear();
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         MarkerOptions options = new MarkerOptions().position(latLng)
-                .title("Duration: " + duration)
-                .snippet("Distance: " + distance)
                 .draggable(true);
         googleMap.addMarker(options);
-        for(int i=0; i<directionsList.length; i++){
+        for (String s : directionsList) {
             PolylineOptions polygonOptions = new PolylineOptions()
                     .color(Color.RED)
                     .width(18)
-                    .addAll(PolyUtil.decode(directionsList[i]));
+                    .addAll(PolyUtil.decode(s));
             googleMap.addPolyline(polygonOptions);
         }
     }
-
+/*
     public static void nearByPlaces(JSONObject jsonObject, GoogleMap googleMap){
         List<HashMap<String,String>> nearbyPlaces = null;
         VolleyParser dataParser = new VolleyParser();
@@ -81,5 +83,5 @@ public class GetByVolley {
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             googleMap.addMarker(options);
         }
-    }
+    }*/
 }
