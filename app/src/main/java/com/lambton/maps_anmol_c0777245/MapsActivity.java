@@ -17,6 +17,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -158,7 +159,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(Polyline polyline) {
-                Log.d(TAG, "onPolylineClick: " + line.getPoints());
+                Log.d(TAG, "onPolylineClick: " + polyline.getPoints());
+
+
+                float[] distance = new float[1];
+
+                Location.distanceBetween(polyline.getPoints().get(0).latitude, polyline.getPoints().get(0).longitude, polyline.getPoints().get(1).latitude, polyline.getPoints().get(1).longitude, distance);
+                Toast.makeText(MapsActivity.this, ( (float) distance[0]) / 1000+ " KM", Toast.LENGTH_SHORT).show();
                 displayDirections(polyline);
             }
         });
@@ -243,7 +250,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void distanceAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("Total Distance (A-B-C-D): " + finalDistance.floatValue() + " km")
+        builder.setMessage("Total Distance (A-B-C-D): " + finalDistance.floatValue() + " km \n\n(Note: This distance is measured through direction API, as to show the difference between Direction API and Location.distance() method.) \n HAPPY CODING")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         finalDistance = 0.0;
@@ -357,10 +364,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         for (int i = 0; i < POLYGON_SIDES; i++) {
             options.add(markers.get(i).getPosition());
-            options1.add(markers.get(i).getPosition());
+            int endIndex;
+            if(i+1 == POLYGON_SIDES){ endIndex = 0;}
+            else {endIndex = i+1; }
+            drawLine(markers.get(i).getPosition(), markers.get(endIndex).getPosition());
         }
         shape = mMap.addPolygon(options);
-        line = mMap.addPolyline(options1);
+    }
+
+
+    private void drawLine(LatLng latLng1, LatLng latLng2){
+        PolylineOptions options = new PolylineOptions()
+                .clickable(true)
+                .color(Color.RED)
+                .width(18)
+                .add(latLng1, latLng2);
+        line = mMap.addPolyline(options);
     }
 
 
