@@ -488,14 +488,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMarkerDragEnd(Marker marker) {
-
-        HashMap<String, String> localityValueHashMap = new HashMap<>();
-        localityValueHashMap = localityValue(new LatLng(marker.getPosition().latitude, marker.getPosition().longitude));
-        marker.setTitle(localityValueHashMap.get("thoroughfare") + ", " + localityValueHashMap.get("subThoroughfare") + ", " + localityValueHashMap.get("postalCode"));
-        marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-        marker.setSnippet(localityValueHashMap.get("locality") + ", " + localityValueHashMap.get("adminArea"));
-
-
+        assignMarker(new LatLng(marker.getPosition().latitude,marker.getPosition().longitude));
     }
 
 

@@ -52,14 +52,14 @@ public class GetDirectionsData extends AsyncTask<Object, Void, String> {
     }
 
     private void displayDirection(String[] directionsList, String distance, String duration) {
-
         MarkerOptions options = new MarkerOptions().position(latLng)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
                 .draggable(true);
         mMap.addMarker(options);
         for(int i=0; i<directionsList.length; i++){
             PolylineOptions polygonOptions = new PolylineOptions()
                     .color(Color.RED)
-                    .width(10)
+                    .width(5)
                     .addAll(PolyUtil.decode(directionsList[i]));
             mMap.addPolyline(polygonOptions);
         }
