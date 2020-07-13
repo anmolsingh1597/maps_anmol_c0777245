@@ -9,7 +9,13 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -48,6 +54,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+
+import static android.graphics.Bitmap.Config.ARGB_8888;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerDragListener {
 
@@ -261,9 +269,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void distanceAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("Total Distance API (A-B-C-D): " + finalDistance.floatValue() + " km \n\n" +
-                "Total Distance (through method()): "+finalDistanceThroughMethod.floatValue() +" km \n\n" +
-                "(Note: This distance is measured through direction API, as to show the difference between Direction API and Location.distance() method.) \n HAPPY CODING")
+        builder.setMessage("Distance through routes (A-B-C-D): \n" + finalDistance.floatValue() + " km \n\n" +
+                "Total Distance (through method()): \n"+finalDistanceThroughMethod.floatValue() +" km \n\n" +
+                "(Note: The first distance is measured through direction API, as to show the difference between Direction API and Location.distance() method.) \n HAPPY CODING")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         finalDistance = 0.0;
@@ -295,38 +303,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void assignMarkers() {
+        String markerAlphabet = "";
+        Bitmap bitmap = null;
+         markerAlphabet = "A";
+        bitmap = makeBitmap(this,markerAlphabet);
+
         HashMap<String, String> localityHashMap = new HashMap<>();
         localityHashMap = localityValue(new LatLng(43.7315, -79.7624));
         MarkerOptions bramptonOptions = new MarkerOptions().position(new LatLng(43.7315, -79.7624))
                 .title(localityHashMap.get("thoroughfare") + ", " + localityHashMap.get("subThoroughfare") + ", " + localityHashMap.get("postalCode"))
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                 .snippet(localityHashMap.get("locality") + ", " + localityHashMap.get("adminArea"))
                 .draggable(true);
         localityHashMap.clear();
-
+        markerAlphabet = "";
+        markerAlphabet = "B";
+        bitmap = makeBitmap(this,markerAlphabet);
         localityHashMap = localityValue(new LatLng(43.8563, -79.5085));
         MarkerOptions vaughanOptions = new MarkerOptions().position(new LatLng(43.8563, -79.5085))
                 .title(localityHashMap.get("thoroughfare") + ", " + localityHashMap.get("subThoroughfare") + ", " + localityHashMap.get("postalCode"))
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                 .snippet(localityHashMap.get("locality") + ", " + localityHashMap.get("adminArea"))
                 .draggable(true);
         localityHashMap.clear();
+        markerAlphabet = "";
+        markerAlphabet = "C";
+        bitmap = makeBitmap(this,markerAlphabet);
 
         localityHashMap = localityValue(new LatLng(43.6532, -79.3832));
         MarkerOptions torontoOptions = new MarkerOptions().position(new LatLng(43.6532, -79.3832))
                 .title(localityHashMap.get("thoroughfare") + ", " + localityHashMap.get("subThoroughfare") + ", " + localityHashMap.get("postalCode"))
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                 .snippet(localityHashMap.get("locality") + ", " + localityHashMap.get("adminArea"))
                 .draggable(true);
         localityHashMap.clear();
-
+        markerAlphabet = "";
+        markerAlphabet = "D";
+        bitmap = makeBitmap(this,markerAlphabet);
         localityHashMap = localityValue(new LatLng(43.3255, -79.7990));
         MarkerOptions burlingtonOptions = new MarkerOptions().position(new LatLng(43.3255, -79.7990))
                 .title(localityHashMap.get("thoroughfare") + ", " + localityHashMap.get("subThoroughfare") + ", " + localityHashMap.get("postalCode"))
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                 .snippet(localityHashMap.get("locality") + ", " + localityHashMap.get("adminArea"))
                 .draggable(true);
         localityHashMap.clear();
+        markerAlphabet = "";
+
 
         if (markers.size() == POLYGON_SIDES) {
             clearMap();
@@ -344,11 +366,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void assignMarker(LatLng latLng) {
 
+        String markerAlphabet = "A";
+        if(markers.size() == 0){
+           markerAlphabet = "A";
+        }else if (markers.size() == 1){
+            markerAlphabet = "B";
+        }else if (markers.size() == 2){
+            markerAlphabet = "C";
+        }else if (markers.size() == 3){
+            markerAlphabet = "D";
+        }
+
         HashMap<String, String> localityHashMap = new HashMap<>();
         localityHashMap = localityValue(latLng);
+        Bitmap bitmap = makeBitmap(this,markerAlphabet);
         MarkerOptions options = new MarkerOptions().position(latLng)
                 .title(localityHashMap.get("thoroughfare") + ", " + localityHashMap.get("subThoroughfare") + ", " + localityHashMap.get("postalCode"))
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
                 .snippet(localityHashMap.get("locality") + ", " + localityHashMap.get("adminArea"))
                 .draggable(true);
         localityHashMap.clear();
@@ -357,6 +391,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.clear();
             clearMap();
         }
+
 
         markers.add(mMap.addMarker(options));
 
@@ -524,5 +559,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         assignMarker(new LatLng(marker.getPosition().latitude,marker.getPosition().longitude));
     }
 
+
+    public Bitmap makeBitmap(Context context, String text)
+    {
+        Resources resources = context.getResources();
+        float scale = resources.getDisplayMetrics().density;
+        Bitmap bitmap = BitmapFactory.decodeResource(resources, R.drawable.marker);
+        bitmap = bitmap.copy(ARGB_8888, true);
+
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.RED); // Text color
+        paint.setTextSize(14 * scale); // Text size
+        paint.setShadowLayer(1f, 0f, 1f, Color.WHITE); // Text shadow
+        Rect bounds = new Rect();
+        paint.getTextBounds(text, 0, text.length(), bounds);
+
+        int x = bitmap.getWidth() - bounds.width() - 10; // 10 for padding from right
+        int y = bounds.height();
+        canvas.drawText(text, x, y, paint);
+
+        return  bitmap;
+    }
 
 }
