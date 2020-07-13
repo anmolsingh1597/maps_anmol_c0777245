@@ -214,7 +214,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
                 endIndex = i + 1;
             }
-
+           
             Object[] dataTransfer = new Object[3];
             String url = getDirectionUrl(polylinePoints.get(i), polylinePoints.get(endIndex));
             dataTransfer[0] = mMap;
@@ -333,6 +333,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         localityHashMap.clear();
 
         if (markers.size() == POLYGON_SIDES) {
+            mMap.clear();
             clearMap();
         }
 

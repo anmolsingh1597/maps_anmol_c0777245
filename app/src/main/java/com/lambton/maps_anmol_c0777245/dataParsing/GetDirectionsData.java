@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -51,16 +52,14 @@ public class GetDirectionsData extends AsyncTask<Object, Void, String> {
     }
 
     private void displayDirection(String[] directionsList, String distance, String duration) {
-        mMap.clear();
+
         MarkerOptions options = new MarkerOptions().position(latLng)
-                                                .title("Duration: " + duration)
-                                                .snippet("Distance: " + distance)
-                                                .draggable(true);
+                .draggable(true);
         mMap.addMarker(options);
         for(int i=0; i<directionsList.length; i++){
             PolylineOptions polygonOptions = new PolylineOptions()
                     .color(Color.RED)
-                    .width(18)
+                    .width(10)
                     .addAll(PolyUtil.decode(directionsList[i]));
             mMap.addPolyline(polygonOptions);
         }
