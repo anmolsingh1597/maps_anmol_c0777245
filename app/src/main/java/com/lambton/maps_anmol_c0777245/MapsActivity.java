@@ -74,6 +74,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Marker homeMarker;
     private Marker destMarker;
     Double finalDistance = 0.0;
+    Double finalDistanceThroughMethod = 0.0;
     int lastIndexForVolleyResponse = -1;
     private boolean alertCalledValue = false;
 
@@ -208,14 +209,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 float[] results = new float[1];
-                double distance = 0.0;
+
 
                 for (int i = 0; i<POLYGON_SIDES; i++) {
                     Location.distanceBetween(polygon.getPoints().get(i).latitude,polygon.getPoints().get(i).longitude,polygon.getPoints().get(i+1).latitude,polygon.getPoints().get(i+1).longitude,results);
-                    distance +=((float) results[0])/1000;
+                    finalDistanceThroughMethod +=((float) results[0])/1000;
                 }
 
-                Toast.makeText(MapsActivity.this, "Total Distance: " + distance +" km", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MapsActivity.this, "Total Distance: " + finalDistanceThroughMethod +" km", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -260,10 +261,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void distanceAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("Total Distance (A-B-C-D): " + finalDistance.floatValue() + " km \n\n(Note: This distance is measured through direction API, as to show the difference between Direction API and Location.distance() method.) \n HAPPY CODING")
+        builder.setMessage("Total Distance API (A-B-C-D): " + finalDistance.floatValue() + " km \n\n" +
+                "Total Distance (through method()): "+finalDistanceThroughMethod.floatValue() +" km \n\n" +
+                "(Note: This distance is measured through direction API, as to show the difference between Direction API and Location.distance() method.) \n HAPPY CODING")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         finalDistance = 0.0;
+                        finalDistanceThroughMethod = 0.0;
                     }
                 })
                 .setCancelable(false)
