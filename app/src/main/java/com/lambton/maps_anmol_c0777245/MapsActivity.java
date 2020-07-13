@@ -569,8 +569,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Canvas canvas = new Canvas(bitmap);
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.RED); // Text color
-        paint.setTextSize(14 * scale); // Text size
+        paint.setColor(Color.DKGRAY); // Text color
+        paint.setTextSize(20 * scale); // Text size
         paint.setShadowLayer(1f, 0f, 1f, Color.WHITE); // Text shadow
         Rect bounds = new Rect();
         paint.getTextBounds(text, 0, text.length(), bounds);
