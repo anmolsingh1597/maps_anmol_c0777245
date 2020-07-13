@@ -165,7 +165,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 float[] distance = new float[1];
 
                 Location.distanceBetween(polyline.getPoints().get(0).latitude, polyline.getPoints().get(0).longitude, polyline.getPoints().get(1).latitude, polyline.getPoints().get(1).longitude, distance);
-                Toast.makeText(MapsActivity.this, ( (float) distance[0]) / 1000+ " KM", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, ( (float) distance[0]) / 1000+ " km", Toast.LENGTH_LONG).show();
                 displayDirections(polyline);
             }
         });
@@ -206,6 +206,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     });
                     VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest);
                 }
+
+                float[] results = new float[1];
+                double distance = 0.0;
+
+                for (int i = 0; i<POLYGON_SIDES; i++) {
+                    Location.distanceBetween(polygon.getPoints().get(i).latitude,polygon.getPoints().get(i).longitude,polygon.getPoints().get(i+1).latitude,polygon.getPoints().get(i+1).longitude,results);
+                    distance +=((float) results[0])/1000;
+                }
+
+                Toast.makeText(MapsActivity.this, "Total Distance: " + distance +" km", Toast.LENGTH_SHORT).show();
             }
         });
     }
