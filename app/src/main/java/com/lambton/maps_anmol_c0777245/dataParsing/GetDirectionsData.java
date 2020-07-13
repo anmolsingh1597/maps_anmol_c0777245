@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.PolyUtil;
+import com.lambton.maps_anmol_c0777245.R;
 import com.lambton.maps_anmol_c0777245.volley.FetchURL;
 
 import java.io.IOException;
@@ -53,7 +54,7 @@ public class GetDirectionsData extends AsyncTask<Object, Void, String> {
 
     private void displayDirection(String[] directionsList, String distance, String duration) {
         MarkerOptions options = new MarkerOptions().position(latLng)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.transparent))
                 .draggable(true);
         mMap.addMarker(options);
         for(int i=0; i<directionsList.length; i++){
