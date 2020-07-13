@@ -36,8 +36,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
@@ -171,22 +173,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onPolylineClick(Polyline polyline) {
                 Log.d(TAG, "onPolylineClick: " + polyline.getPoints());
-
+                displayDirections(polyline);
 
                 float[] distance = new float[1];
 
                 Location.distanceBetween(polyline.getPoints().get(0).latitude, polyline.getPoints().get(0).longitude, polyline.getPoints().get(1).latitude, polyline.getPoints().get(1).longitude, distance);
-                Snackbar.make(findViewById(android.R.id.content),( (float) distance[0]) / 1000+ " km",Snackbar.LENGTH_LONG)
+                Snackbar.make(findViewById(android.R.id.content),String.format(Locale.CANADA,"%.2f Km", ( (float) distance[0]) / 1000),Snackbar.LENGTH_LONG)
                         .setAction("CLOSE", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-
                             }
                         })
                         .setActionTextColor(getResources().getColor(android.R.color.holo_red_light ))
                         .show();
 
-                displayDirections(polyline);
+//                distMarker(polyline.getPoints().get(0), polyline.getPoints().get(1), ( (float) distance[0]) / 1000);
             }
         });
 
@@ -240,6 +241,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    private void distMarker(LatLng start, LatLng dest, float distance)
+    {
+
+        LatLngBounds bounds = new LatLngBounds(start, dest);
+        LatLng midPoints =bounds.getCenter();
+        BitmapDescriptor transparent = BitmapDescriptorFactory.fromResource(R.mipmap.transparent);
+        MarkerOptions options = new MarkerOptions()
+                .position(midPoints)
+                .title(String.format(Locale.CANADA,"%.2f Km", distance))
+                .snippet("snippet")
+                .icon(transparent)
+                .anchor((float) 0.5, (float) 0.5);
+        Marker marker = mMap.addMarker(options);
+        //open the marker's info window
+        marker.showInfoWindow();
+
+    }
+    public LatLng midPoint(double lat1,double lon1,double lat2,double lon2){
+        double dLon = Math.toRadians(lon2 - lon1);
+        //convert to radians
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+        lon1 = Math.toRadians(lon1);
+        double Bx = Math.cos(lat2) * Math.cos(dLon);
+        double By = Math.cos(lat2) * Math.sin(dLon);
+        double lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
+        double lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
+        return new LatLng(Math.toDegrees(lat3), Math.toDegrees(lon3));
+    }
+
     private void displayDirections(Polyline polyline) {
         final List<LatLng> polylinePoints = polyline.getPoints();
         int endIndex;
@@ -280,8 +311,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void distanceAlert() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-        builder.setMessage("Distance through routes (A-B-C-D): \n" + finalDistance.floatValue() + " km \n\n" +
-                "Total Distance (through method()): \n"+finalDistanceThroughMethod.floatValue() +" km \n\n" +
+        builder.setMessage("Distance through routes (A-B-C-D): \n" + String.format(Locale.CANADA,"%.2f Km", finalDistance) + "\n\n" +
+                "Total Distance (through method()): \n"+String.format(Locale.CANADA,"%.2f Km", finalDistanceThroughMethod) +" \n\n" +
                 "(Note: The first distance is measured through direction API, as to show the difference between Direction API and Location.distance() method.) \n HAPPY CODING")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
